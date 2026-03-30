@@ -1,0 +1,7 @@
+[project]
+name = "lootboxes"
+version = "69.42.0"
+
+dependencies = [
+    "numpy>=2.4.3"
+]
