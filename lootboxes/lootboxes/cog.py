@@ -42,6 +42,7 @@ class Lootboxes(commands.Cog):
         self.economy: bool = False
         self.ball_price = 0
         self.economy_price = 0
+        self.min_rarity = 0.0
     
     lootboxes = app_commands.Group(name="lootbox", description="Lootbox commands")
 
@@ -56,6 +57,7 @@ class Lootboxes(commands.Cog):
         self.ball_price = settings_obj.ball_instance_price
         self.economy_price = settings_obj.economy_price
         self.economy = settings_obj.economy
+        self.min_rarity = settings_obj.min_rarity
 
 
     @app_commands.command(name="rare_balls")
@@ -366,7 +368,7 @@ async def get_random_ball(interaction, cog):
     weights = []
     for ball in all_balls:
         weight = ball.rarity
-        if ball.rarity >= 3:
+        if ball.rarity >= cog.min_rarity:
             weight *= bias
         weights.append(weight)
 

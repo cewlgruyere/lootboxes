@@ -32,6 +32,7 @@ class Migration(migrations.Migration):
                 ('ball_instance_price', models.IntegerField(default=1, help_text='How many balls get sacrificed for a lootbox')),
                 ('economy_price', models.IntegerField(default=100, help_text='How much money gets used to obtain a lootbox')),
                 ('rig_multiplier', models.IntegerField(default=100, help_text='The bias towards common balls')),
+                ('min_rarity', models.FloatField(default=3.0, help_text='The default rarity where if the collectibles rarity is above then the rig multiplier will apply.')),
             ],
         ),
 
