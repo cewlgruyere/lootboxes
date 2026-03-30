@@ -1,5 +1,5 @@
 from django.db import models
-from bd_models.models import Player, ballinstance
+from bd_models.models import Player
 # Create your models here.
 class LootSettings(models.Model):
     economy = models.BooleanField(help_text="Enables economy settings")

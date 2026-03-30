@@ -9,10 +9,26 @@ import random
 from asgiref.sync import sync_to_async
 from ..models import Lootbox, LootSettings, PlayerLootbox
 import numpy
+from discord.utils import utcnow
+from datetime import timedelta
 
 if TYPE_CHECKING:
     from ballsdex.core.bot import BallsDexBot
 
+class SacrificeView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=30)
+        self.accepted = None
+
+    @discord.ui.button(label="✅", style=discord.ButtonStyle.green)
+    async def accept_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.accepted = True
+        await interaction.response.defer()
+        self.stop()
+
+    @discord.ui.button(label="❌", style=discord.ButtonStyle.red)
+    async def decline_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        pass
 class Lootboxes(commands.Cog):
     '''
     Lootboxes Commands and stuff ig uwu idk
@@ -61,6 +77,8 @@ class Lootboxes(commands.Cog):
     @app_commands.describe(lootbox="The lootbox you want to purchase")
     @app_commands.autocomplete(lootbox=lootbox_autocomplete)
     async def purchase(self, interaction: discord.Interaction, lootbox: str):
+        auto_accept_time = utcnow() + timedelta(seconds=30)
+        the_time = discord.utils.format_dt(auto_accept_time, style='R')
         await self.get_settings()
         player = await Player.objects.aget_or_none(discord_id=interaction.user.id)
         lootbox_obj = await sync_to_async(lambda: Lootbox.objects.filter(name=lootbox).first())()
@@ -88,18 +106,27 @@ class Lootboxes(commands.Cog):
                     ephemeral=False
                 )
                 return
-
+            sacrifice = SacrificeView()
             ball_names = ", ".join(ball.countryball.country for ball in removed_balls)
+
+            embed = discord.Embed(description=f"Are you willing to sacrifice the following balls for a lootbox: {ball_names}?\n-# Auto accepts in {the_time}")
+            await interaction.response.send_message(embed=embed, view=sacrifice)
+
+            await sacrifice.wait()
+            
             await PlayerLootbox.objects.acreate(player=player, lootbox=lootbox_obj)
-            await interaction.response.send_message(
-                f"🌟You purchased the lootbox {lootbox} and lost these expensive ass balls: {ball_names}⭐",
-                ephemeral=True
+            await interaction.edit_original_response(
+                content=f"🌟You purchased lootbox {lootbox}™ and lost these expensive ass balls: {ball_names}⭐",
+                embed=None,
+                view=None
             )
     @lootboxes.command(name="gift")
     @app_commands.describe(lootbox="The lootbox you want to purchase", user="The user you want to gift the lootbox to")
     @app_commands.autocomplete(lootbox=lootbox_autocomplete)
     async def purchase(self, interaction: discord.Interaction, lootbox: str, user:discord.User):
         await self.get_settings()
+        auto_accept_time = utcnow() + timedelta(seconds=30)
+        the_time = discord.utils.format_dt(auto_accept_time, style='R')
         player = await Player.objects.aget_or_none(discord_id=interaction.user.id)
         player2 = await Player.objects.aget_or_none(discord_id=user.id)
         lootbox_obj = await sync_to_async(lambda: Lootbox.objects.filter(name=lootbox).first())()
@@ -141,11 +168,19 @@ class Lootboxes(commands.Cog):
                 )
                 return
 
+            sacrifice = SacrificeView()
             ball_names = ", ".join(ball.countryball.country for ball in removed_balls)
+
+            embed = discord.Embed(description=f"Are you willing to sacrifice the following balls to give this guy a lootbox: {ball_names}?\n-# Auto accepts in {the_time}")
+            await interaction.response.send_message(embed=embed, view=sacrifice)
+
+            await sacrifice.wait()
+
             await PlayerLootbox.objects.acreate(player=player2, lootbox=lootbox_obj)
-            await interaction.response.send_message(
-                f"Hey {user.mention}! {interaction.user.mention} purchased you lootbox {lootbox}™ and lost '{ball_names}'. Be grateful.",
-                ephemeral=False
+            await interaction.edit_original_response(
+                content=f"Hey {user.mention}! {interaction.user.mention} purchased you lootbox {lootbox}™ and lost '{ball_names}'. Be grateful.",
+                embed=None,
+                view=None
             )
     async def player_lootbox_autocomplete(self, interaction: discord.Interaction, current: str):
         qs = await sync_to_async(lambda: list(
