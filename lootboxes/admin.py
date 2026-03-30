@@ -33,6 +33,7 @@ class LootSettingsAdmin(admin.ModelAdmin):
             "fields": (
                 "economy",
                 "rig_multiplier",
+                "min_rarity",
                 "ball_instance_price",
                 "economy_price",
             ),
